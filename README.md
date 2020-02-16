@@ -31,7 +31,7 @@ An implementation of a traffic simulation optimisation with reinforcement learni
   - `-mount src=$(pwd)/notebooks, target=/app/notebooks, type=bind` : this allow us to mount a volume to create a shared folder between the folder 'notebooks' of this repo and a notebook folder in the container.
   - `flow_ubuntu` : The image of he container  
     
-#### 3. Once the container is started (you will see a `#` at the beging of each command line in place of a `$`). Write the following commands :
+#### 3. Once the container is started (you will see a `#` at the begining of each command line in place of a `$`). Write the following commands :
 
 - `conda activate flow` to activate the flow environement
 - `jupyter notebook --ip=127.0.0.1 --allow-root` to start the jupyter notebook.
