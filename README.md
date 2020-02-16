@@ -16,15 +16,10 @@ An implementation of a traffic simulation optimisation with reinforcement learni
 2. Start & run the container in interractive mode:
 
     docker run -ti \
-    
         -e DISPLAY=$DISPLAY \
-        
         -p 8888:8888 \
-        
         --name flow-container \
-        
         --mount src="$(pwd)/notebooks",target=/app/notebooks,type=bind \
-        
         flow_ubuntu
 
     For this step, this are the meanings of our diffrecents parameters :
