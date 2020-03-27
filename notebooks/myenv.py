@@ -18,10 +18,7 @@ class myEnv(Env):
 
     @property
     def observation_space(self):
-        return Box(
-            low=0,
-            high=float("inf"),
-            shape=(2*self.network.vehicles.num_vehicles,))
+        return Box(low=0, high=float("inf"), shape=(2*(self.network.vehicles.num_vehicles+1),))
 
     def _apply_rl_actions(self, rl_actions):
         # the names of all autonomous (RL) vehicles in the network
