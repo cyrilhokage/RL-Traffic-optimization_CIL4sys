@@ -8,9 +8,29 @@ import numpy as np
 # define the environment class, and inherit properties from the base environment class
 class MyEnv(Env):
     
+    """
+        Function to get Vehicles ids in an environment
+        Return : a list of vehicles id in the environment
+        
+    """
+    def get_veh_ids(self):
+        
+        try:
+            
+            ids = self.k.vehicle.get_ids()
+            assert len(ids) != 0       #On teste si la liste des ids n'est pas vide
+            
+            return ids
+            
+        except AssertionError:
+            print("\n \n \n \n \t -------------------- \n \t  Un probleme lors de la récupération des ids des véhicules ! \n \t ------------ \n \n ")
+            return None 
+    
+    
     @property
     def action_space(self):
-        num_actions = self.initial_vehicles.num_rl_vehicles
+        #num_actions = self.initial_vehicles.num_rl_vehicles
+        num_actions = len(self.k.vehicle.get_rl_ids())
         accel_ub = self.env_params.additional_params["max_accel"]
         accel_lb = - abs(self.env_params.additional_params["max_decel"])
 
@@ -23,7 +43,7 @@ class MyEnv(Env):
         return Box(
             low=0,
             high=float("inf"),
-            shape=(2*self.initial_vehicles.num_vehicles,),
+            shape=(40*len(self.k.vehicle.get_ids()),),
         )
     
     def _apply_rl_actions(self, rl_actions):
@@ -49,11 +69,13 @@ class MyEnv(Env):
     
     def compute_reward(self, rl_actions, **kwargs):
         # the get_ids() method is used to get the names of all vehicles in the network
-        ids = self.k.vehicle.get_ids()
-
+        ids = self.get_veh_ids()
+        
         # we next get a list of the speeds of all vehicles in the network
         speeds = self.k.vehicle.get_speed(ids)
-
+            
         # finally, we return the average of all these speeds as the reward
         return np.mean(speeds)
+        
+     
     
