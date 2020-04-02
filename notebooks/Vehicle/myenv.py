@@ -59,32 +59,18 @@ class myEnv(Env):
         should start off at.
         """
         edge = self.k.vehicle.get_edge(veh_id)
-        if edge == "":
-            return
-        if edge[0] == ":":  # center edge
-            return
-        pattern   = re.compile(r"[0-9]+")
-        print(edge)
-        edge_type = pattern.match(edge).group()
-        edge      = edge.split(edge_type)[1].split('_')
-        row_index, col_index = [int(x) for x in edge]
-        
-        # find the route that we're going to place the vehicle on if we are going to remove it
-        route_id = None
-        if edge_type == 'bot' and col_index == self.cols:
-            route_id = "bot{}_0".format(row_index)
-        elif edge_type == 'top' and col_index == 0:
-            route_id = "top{}_{}".format(row_index, self.cols)
-        elif edge_type == 'left' and row_index == 0:
-            route_id = "left{}_{}".format(self.rows, col_index)
-        elif edge_type == 'right' and row_index == self.rows:
-            route_id = "right0_{}".format(col_index)
-
-        if route_id is not None:
-            type_id    = self.k.vehicle.get_type(veh_id)
-            lane_index = self.k.vehicle.get_lane(veh_id)
+        current_route = self.k.vehicle.get_route(veh_id)
+        if len(current_route) == 0: # this occurs to inflowing vehicles, whose information is not added  to the subscriptions in the first step that they departed
+            return None
+        elif edge == current_route[-1]:
+            route_id = current_route[0]
             # remove the vehicle
             self.k.vehicle.remove(veh_id)
             # reintroduce it at the start of the network
+            type_id = "rl"
+            lane_index = "free"
             self.k.vehicle.add(veh_id=veh_id, edge=route_id, type_id=str(type_id), lane=str(lane_index), pos="0", speed="max")
+        else:
+            return None
+
 
