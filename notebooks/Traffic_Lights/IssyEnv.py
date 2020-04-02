@@ -51,7 +51,7 @@ class IssyEnv1(BaseIssyEnv):
 
         (See parent class for more information)"""
         veh_ids = self.get_observable_veh_ids()
-        tl_ids = self.get_controlled_tl_ids()
+        tl_ids  = self.get_controlled_tl_ids()
 
         return np.concatenate((
             self.states.veh.speeds(veh_ids),
@@ -68,16 +68,14 @@ class IssyEnv1(BaseIssyEnv):
         with idled cars.
 
         (See parent class for more information)"""
-        max_emission = 3000    # mg of CO2 per timestep
-        min_speed = 10         # km/h
-        idled_max_steps = 80   # steps
-        max_abs_acc = 0.15     # m / s^2
+        max_emission    = 3000  # mg of CO2 per timestep
+        min_speed       = 10    # km/h
+        idled_max_steps = 80    # steps
+        max_abs_acc     = 0.15  # m / s^2
         c = 0.001
         return c * (
             self.rewards.penalize_min_speed(min_speed) +
             self.rewards.penalize_max_emission(max_emission) +
-            self.rewards.penalize_max_wait(self.obs_veh_wait_steps,
-                                           idled_max_steps, 0, -10) +
-            self.rewards.penalize_max_acc(self.obs_veh_acc,
-                                          max_abs_acc, 1, 0)
+            self.rewards.penalize_max_wait(self.obs_veh_wait_steps, idled_max_steps, 0, -10) +
+            self.rewards.penalize_max_acc(self.obs_veh_acc, max_abs_acc, 1, 0)
         )

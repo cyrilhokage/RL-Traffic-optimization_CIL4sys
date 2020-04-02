@@ -189,16 +189,10 @@ flow_params = dict(
     simulator='traci',
 
     # sumo-related parameters (see flow.core.params.SumoParams)
-    sim=SumoParams(
-        sim_step=1,
-        render=False,
-    ),
+    sim=SumoParams(sim_step=1, render=False),
 
     # environment related parameters (see flow.core.params.EnvParams)
-    env=EnvParams(
-        horizon=HORIZON,
-        additional_params=additional_env_params,
-    ),
+    env=EnvParams(horizon=HORIZON,additional_params=additional_env_params),
 
     # network-related parameters (see flow.core.params.NetParams and the
     # network's documentation or ADDITIONAL_NET_PARAMS component). This is
