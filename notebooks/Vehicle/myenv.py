@@ -63,7 +63,7 @@ class myEnv(Env):
             return
         if edge[0] == ":":  # center edge
             return
-        pattern   = re.compile(r"[a-zA-Z]+")
+        pattern   = re.compile(r"[0-9]+")
         print(edge)
         edge_type = pattern.match(edge).group()
         edge      = edge.split(edge_type)[1].split('_')
