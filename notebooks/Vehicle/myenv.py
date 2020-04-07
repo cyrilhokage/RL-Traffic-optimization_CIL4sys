@@ -20,7 +20,7 @@ class myEnv(Env):
     def observation_space(self):
         
         num_obs = 2*self.network.vehicles.num_vehicles # 2*self.k.vehicle.num_vehicles # 
-        return Box(low=0, high=float("inf"), shape=(num_obs,), dtype=np.float32)
+        return Box(low=-float("inf"), high=float("inf"), shape=(num_obs,), dtype=np.float32)
 
     def _apply_rl_actions(self, rl_actions):
 
@@ -43,14 +43,13 @@ class myEnv(Env):
         return np.mean(speeds)
 
     def additional_command(self):
-        """See parent class.
-
+        """
         Used to insert vehicles that are on the exit edge and place them
         back on their entrance edge.
         """
         for veh_id in self.k.vehicle.get_ids():
-            if "rl" in veh_id:
-            	self._reroute_if_final_edge(veh_id)
+            #if "rl" in veh_id:
+            self._reroute_if_final_edge(veh_id)
 
     def _reroute_if_final_edge(self, veh_id):
         """Reroute vehicle associated with veh_id.
@@ -67,7 +66,12 @@ class myEnv(Env):
             # remove the vehicle
             self.k.vehicle.remove(veh_id)
             # reintroduce it at the start of the network
-            type_id = "rl"
+            if "rl" in veh_id:
+                type_id = "rl"
+            elif "human" in veh_id:
+                type_id = "human"
+            else:
+                print(veh_id,"= ERROR TYPE VEHICULE")
             lane_index = "free"
             self.k.vehicle.add(veh_id=veh_id, edge=route_id, type_id=str(type_id), lane=str(lane_index), pos="0", speed="max")
         else:
