@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Train Traffic Lights Agents
+# # Test Traffic Lights Agents
 # 
 # Utilise les fonctions de @Binetruy
 # 
@@ -15,7 +15,7 @@
 
 
 from flow.core.params import VehicleParams
-from flow.core.params import NetParams, SumoCarFollowingParams
+from flow.core.params import NetParams
 from flow.core.params import InitialConfig
 from flow.core.params import EnvParams
 from flow.core.params import SumoParams
@@ -23,14 +23,7 @@ from flow.controllers import RLController, IDMController
 from flow.networks import Network
 from flow.core.params import InFlows
 from collections import OrderedDict
-import json
-import ray
-from ray.rllib.agents.registry import get_agent_class
-from ray.tune import run_experiments
-from ray.tune.registry import register_env
-from flow.utils.registry import make_create_env
-from flow.utils.rllib import FlowParamsEncoder
-from flow.core.params import VehicleParams, SumoCarFollowingParams
+from flow.core.experiment import Experiment
 
 
 # ## Crée le network
@@ -153,8 +146,7 @@ inflow.add(veh_type       = "rl",
            edge           = "-100822066",
            probability    = 0.05,
            depart_speed   = 7,
-           depart_lane    = "random",
-           color          = "blue")
+           depart_lane    = "random")
 
 inflow.add(veh_type       = "human",
            edge          = "155558218",
@@ -173,7 +165,7 @@ inflow.add(veh_type       = "human",
 from IssyEnv import IssyEnv1
 
 
-# ## Lance une simulation avec Training RLlib
+# ## Lance une simulation
 # 
 # Pour qu'un environnement puisse être entrainé, l'environnement doit être accessible via l'importation à partir de flow.envs. 
 # 
@@ -195,7 +187,7 @@ action_spec = OrderedDict({ "30677963": [ "GGGGrrrGGGG", "rrrrGGGrrrr"],
 # In[8]:
 
 
-horizon  = 100
+HORIZON  = 100
 SIM_STEP = 0.1
 n_veh    = 12
 rollouts = 10
@@ -207,11 +199,11 @@ discount_rate = 0.999
 
 
 # SUMO PARAM
-sumo_params = SumoParams(sim_step=SIM_STEP, render=False, restart_instance=True)
+sumo_params = SumoParams(sim_step=SIM_STEP, render=True)
 
 # ENVIRONMENT PARAM
 ADDITIONAL_ENV_PARAMS = {"beta": n_veh, "action_spec": action_spec, "algorithm": "DQN", "tl_constraint_min": 100,  "tl_constraint_max": 600, "sim_step": SIM_STEP}
-env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS, horizon=horizon, warmup_steps=1)
+env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS, horizon=HORIZON, warmup_steps=1)
 
 # NETWORK PARAM
 path_file  = '/home/julien/projet_CIL4SYS/NOTEBOOKS/issy.osm'
@@ -226,7 +218,7 @@ initial_config = InitialConfig(edges_distribution=EDGES_DISTRIBUTION)
 
 flow_params = dict( exp_tag   = "ISSY_traffic", 
                     env_name  = IssyEnv1,  
-                    network   = IssyOSMNetwork,
+                    network   = network, #IssyOSMNetwork,
                     simulator = 'traci',
                     sim       = sumo_params,
                     env       = env_params,
@@ -234,106 +226,11 @@ flow_params = dict( exp_tag   = "ISSY_traffic",
                     veh       = vehicles,
                     initial   = initial_config)
 
+# create EXPERIMENT with class created
+exp = Experiment(flow_params)
 
-# # Setup RLlib library
-
-# Configures RLlib DQN algorithm to be used to train the RL model.
-
-# In[10]:
-
-
-def setup_DQN_exp():
-
-    alg_run   = 'DQN'
-    agent_cls = get_agent_class(alg_run)
-    config    = agent_cls._default_config.copy()
-    config['num_workers']      = n_cpus
-    config['train_batch_size'] = horizon * rollouts
-    config['gamma']            = discount_rate
-    config['clip_actions']     = False  # FIXME(ev) temporary ray bug
-    config['horizon']          = horizon
-    config["hiddens"]          = [256]
-    config['model'].update({'fcnet_hiddens': [32, 32]})
-
-    # save the flow params for replay
-    flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True, indent=4)
-    config['env_config']['flow_params'] = flow_json
-    config['env_config']['run'] = alg_run
-
-    create_env, gym_name = make_create_env(params=flow_params, version=0)
-
-    # Register as rllib env
-    register_env(gym_name, create_env)
-    
-    return alg_run, gym_name, config
-
-
-# Configures RLlib PPO algorithm to be used to train the RL model.
-# 
-# See: https://ray.readthedocs.io/en/latest/rllib-algorithms.html#proximal-policy-optimization-ppo
-
-# In[11]:
-
-
-def setup_PPO_exp():
-
-    alg_run   = 'PPO'
-    agent_cls = get_agent_class(alg_run)
-    config    = agent_cls._default_config.copy()
-    config['num_workers']      = n_cpus
-    config['train_batch_size'] = horizon * rollouts
-    config['gamma']            = discount_rate
-    config['use_gae']          = True
-    config['lambda']           = 0.97
-    config['kl_target']        = 0.02
-    config['num_sgd_iter']     = 10
-    config['clip_actions']     = False  # FIXME(ev) temporary ray bug
-    config['horizon']          = horizon
-    config['model'].update({'fcnet_hiddens': [32, 32]})
-
-    # save the flow params for replay
-    flow_json = json.dumps(flow_params,cls=FlowParamsEncoder,sort_keys=True,indent=4)
-    config['env_config']['flow_params'] = flow_json
-    config['env_config']['run'] = alg_run
-
-    create_env, gym_name = make_create_env(params=flow_params,version=0)
-
-    # Register as rllib env
-    register_env(gym_name, create_env)
-    
-    return alg_run, gym_name, config
-
-
-# # Run Experiment
-
-# In[12]:
-
-
-alg_run, gym_name, config = setup_DQN_exp()
-
-ray.init(num_cpus=n_cpus + 1)
-
-
-# In[13]:
-
-
-# import pixiedust
-# %%pixie_debugger
-
-
-# In[14]:
-
-
-exp_tag = {"run": alg_run,
-           "env": gym_name,
-           "config": {**config},
-           "checkpoint_freq": 2,
-           "checkpoint_at_end": True,
-           "max_failures": 999,
-           "stop": {"training_iteration": 6}}
-
-
-trials = run_experiments({flow_params["exp_tag"]: exp_tag})
+# RUN SIMULATION SUMO
+_ = exp.run(1)
 
 
 # In[ ]:

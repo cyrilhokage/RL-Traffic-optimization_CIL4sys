@@ -3,7 +3,6 @@
 from flow.envs import Env
 from gym.spaces.box import Box
 import numpy as np
-import re
 
 class myEnv(Env):
 
