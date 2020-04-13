@@ -42,7 +42,7 @@ class IssyEnv1(BaseIssyEnv):
 
         (See parent class for more information)"""
 
-        return Box(low=0, high=float("inf"), shape=(7 * self.network.vehicles.num_vehicles + self.get_num_traffic_lights() + len(self.action_spec.keys()), ) )
+        return Box(low=-float("inf"), high=float("inf"), shape=(7 * self.network.vehicles.num_vehicles + self.get_num_traffic_lights() + len(self.action_spec.keys()), ) )
 
     def get_state(self, **kwargs):
         """ We concatenate time tl have maintained state and vehicle

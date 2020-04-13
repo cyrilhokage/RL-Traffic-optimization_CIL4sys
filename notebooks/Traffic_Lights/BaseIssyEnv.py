@@ -34,8 +34,8 @@ class BaseIssyEnv(Env):
         A rollout is terminated once the time horizon is reached.
     """
 
-    def __init__(self, env_params, sim_params, scenario, simulator='traci'):
-        super().__init__(env_params, sim_params, scenario, simulator)
+    def __init__(self, env_params, sim_params, network, simulator='traci'):
+        super().__init__(env_params, sim_params, network, simulator)
         self.beta              = env_params.get_additional_param("beta")
         self.tl_constraint_min = env_params.get_additional_param("tl_constraint_min")
         self.tl_constraint_max = env_params.get_additional_param("tl_constraint_max")
@@ -328,7 +328,7 @@ class BaseIssyEnv(Env):
         # remove the vehicle
         self.k.vehicle.remove(veh_id)
         # reintroduce it at the start of the network
-        random_route = self.scenario.get_random_route()
+        random_route = self.network.get_random_route()
         self.k.vehicle.add(veh_id=veh_id,
                            edge=random_route,
                            type_id=str(type_id),
