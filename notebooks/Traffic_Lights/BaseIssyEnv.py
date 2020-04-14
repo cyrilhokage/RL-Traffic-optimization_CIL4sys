@@ -332,6 +332,6 @@ class BaseIssyEnv(Env):
         self.k.vehicle.add(veh_id=veh_id,
                            edge=random_route,
                            type_id=str(type_id),
-                           lane=str(0),
+                           lane="best",
                            pos="0",
                            speed="max")
