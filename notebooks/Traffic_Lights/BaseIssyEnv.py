@@ -7,8 +7,8 @@ from gym.spaces.discrete import Discrete
 
 from flow.envs import Env
 
-from Rewards import Rewards
-from States import States
+from flow.envs.Rewards import Rewards         # for Colab place Rewards.py in flow/flow/envs
+from flow.envs.States import States           # for Colab place States.py in flow/flow/envs
 
 
 class BaseIssyEnv(Env):

@@ -2,7 +2,7 @@ import numpy as np
 
 from gym.spaces.box import Box
 
-from BaseIssyEnv import BaseIssyEnv
+from flow.envs.BaseIssyEnv import BaseIssyEnv 	    # for Colab place BaseIssyEnv.py in flow/flow/envs
 
 
 class IssyEnv1(BaseIssyEnv):
