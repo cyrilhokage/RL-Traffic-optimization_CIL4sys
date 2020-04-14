@@ -1,5 +1,5 @@
 import numpy as np
-from helpers import flatten
+from flow.envs.helpers import flatten
 from collections import OrderedDict
 
 
