@@ -42,7 +42,8 @@ class IssyEnv1(BaseIssyEnv):
 
         (See parent class for more information)"""
 
-        return Box(low=-float("inf"), high=float("inf"), shape=(7 * self.network.vehicles.num_vehicles + self.get_num_traffic_lights() + len(self.action_spec.keys()), ) )
+        num_obs_veh = self.beta # self.network.vehicles.num_vehicles #len(self.get_observable_veh_ids())
+        return Box(low=-float("inf"), high=float("inf"), shape=(7 * num_obs_veh + self.get_num_traffic_lights() + len(self.action_spec.keys()), ) )
 
     def get_state(self, **kwargs):
         """ We concatenate time tl have maintained state and vehicle
@@ -52,13 +53,13 @@ class IssyEnv1(BaseIssyEnv):
         (See parent class for more information)"""
         veh_ids = self.get_observable_veh_ids()
         tl_ids  = self.get_controlled_tl_ids()
-
+        current_accelerations = [item[-1] for item in self.states.veh.accelerations(self.obs_veh_acc)]
         return np.concatenate((
             self.states.veh.speeds(veh_ids),
             self.states.veh.orientations(veh_ids),
             self.states.veh.CO2_emissions(veh_ids),
             self.states.veh.wait_steps(self.obs_veh_wait_steps),
-            self.states.veh.accelerations(self.obs_veh_acc),
+            current_accelerations,
             self.states.tl.binary_state_ohe(tl_ids),
             self.states.tl.wait_steps(self.obs_tl_wait_steps),
         ))
@@ -68,14 +69,14 @@ class IssyEnv1(BaseIssyEnv):
         with idled cars.
 
         (See parent class for more information)"""
-        max_emission    = 3000  # mg of CO2 per timestep
+        
+        
         min_speed       = 10    # km/h
         idled_max_steps = 80    # steps
-        max_abs_acc     = 0.15  # m / s^2
+        max_abs_acc     = 0.15  # m/s^2
         c = 0.001
         return c * (
             self.rewards.penalize_min_speed(min_speed) +
-            self.rewards.penalize_max_emission(max_emission) +
             self.rewards.penalize_max_wait(self.obs_veh_wait_steps, idled_max_steps, 0, -10) +
             self.rewards.penalize_max_acc(self.obs_veh_acc, max_abs_acc, 1, 0)
         )

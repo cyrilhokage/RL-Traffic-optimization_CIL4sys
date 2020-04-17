@@ -46,6 +46,7 @@ class BaseIssyEnv(Env):
         self.rewards           = Rewards(self.k, self.action_spec)
         self.states            = States(self.k, self.beta)
 
+        print('=== INITIALISATION ===')
         self._init_obs_veh_acc()
         self._init_obs_veh_wait_steps()
         self._init_obs_tl_wait_steps()
@@ -53,29 +54,31 @@ class BaseIssyEnv(Env):
         # Used for debug purposes
         self.current_timestep = 0
 
+
     def _init_obs_veh_acc(self):
         """Initializes the data structures that will store vehicle speeds and accelerations"""
-        placeholder       = 0.
-        self._obs_veh_vel = OrderedDict([('human_' + str(i), placeholder)  for i in range(self.beta)])
-        self.obs_veh_acc  = OrderedDict([('human_' + str(i), placeholder) for i in range(self.beta)])
+        self._obs_veh_vel = OrderedDict([('human_' + str(i), 0)  for i in range(self.beta)])
+        self.obs_veh_acc  = OrderedDict([('human_' + str(i), [0]) for i in range(self.beta)])
 
     def _update_obs_veh_acc(self):
         """Updates the observed vehicle speed and acceleration data structures.
         We do so by using an ordered dict to maintain column order across
         timesteps. When vehicles are being re-spawned, we set their
         acceleration to 0."""
+        #print('i=',self.current_timestep,':',self.obs_veh_acc,'\n')
         
         placeholder = 0.
         speed_odict = OrderedDict([('human_' + str(i), placeholder) for i in range(self.beta)])
-        acc_odict   = OrderedDict([('human_' + str(i), placeholder) for i in range(self.beta)])
 
         for id in self.get_observable_veh_ids():
             speed_odict[id] = self.k.vehicle.get_speed(id)
 
         for i, id in enumerate(self.get_observable_veh_ids()):
-            acc_odict[id] = (speed_odict[id] - self._obs_veh_vel[id]) / self.sim_step
+            new_acc  = (speed_odict[id] - self._obs_veh_vel[id]) / self.sim_step
+            list_acc = self.obs_veh_acc[id].copy()
+            list_acc.append(new_acc)
+            self.obs_veh_acc[id] = list_acc
 
-        self.obs_veh_acc  = acc_odict
         self._obs_veh_vel = speed_odict
 
     def _init_obs_veh_wait_steps(self):
@@ -280,10 +283,8 @@ class BaseIssyEnv(Env):
 
         - updates how long observable vehicles have been waiting for.
         - updates how long traffic lights have been in the same state for.
-        - Used to insert vehicles that are on the exit edge and place them
-        back on their entrance edge.
-        - It also colors the beta observable
-        vehicles on sumo's gui.
+        - Used to insert vehicles that are on the exit edge and place them back on their entrance edge.
+        - It also colors the beta observable vehicles on sumo's gui.
 
         See parent class for more information."""
         self._update_obs_wait_steps()
@@ -293,9 +294,6 @@ class BaseIssyEnv(Env):
         for veh_id in self.k.vehicle.get_ids():
             self._reroute_if_final_edge(veh_id)
 
-            # color beta observable vehicles
-            if 'human' in veh_id:
-                self.k.vehicle.set_color(veh_id, color=(255, 0, 0))
 
         # Used for debug purposes
         self.current_timestep += 1
@@ -319,7 +317,7 @@ class BaseIssyEnv(Env):
 
         # don't reroute if vehicle is not on route final edge
         current_edge = self.k.vehicle.get_edge(veh_id)
-        final_edge = self.k.vehicle.get_route(veh_id)[-1]
+        final_edge   = self.k.vehicle.get_route(veh_id)[-1]
         if current_edge != final_edge:
             return
 
@@ -328,7 +326,7 @@ class BaseIssyEnv(Env):
         # remove the vehicle
         self.k.vehicle.remove(veh_id)
         # reintroduce it at the start of the network
-        random_route = self.scenario.get_random_route()
+        random_route = self.network.get_random_route()
         self.k.vehicle.add(veh_id=veh_id,
                            edge=random_route,
                            type_id=str(type_id),
