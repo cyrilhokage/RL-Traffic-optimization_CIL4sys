@@ -39,9 +39,15 @@ EDGES_DISTRIBUTION = ["-100822066", "4794817", "4783299#0", "155558218"]
 # créer la classe Network pour spécifier les itinéraires possibles
 
 # In[3]:
-
+import random
 
 class IssyOSMNetwork(Network):
+    
+    def get_routes_list(self):
+        return list(self.specify_routes({}).keys())
+
+    def get_random_route(self):
+        return random.choice(self.get_routes_list())    
 
     def specify_routes(self, net_params):
         return {
@@ -104,9 +110,13 @@ class IssyOSMNetwork(Network):
 # In[4]:
 
 
+n_veh    = 12
 vehicles = VehicleParams()
-vehicles.add("human",acceleration_controller=(IDMController, {}), num_vehicles=10)
-vehicles.add("rl",acceleration_controller=(RLController, {}), num_vehicles=2)
+vehicles.add("human",acceleration_controller=(IDMController, {}), num_vehicles=n_veh, color='red')
+vehicles.add("flow",acceleration_controller=(IDMController, {}), num_vehicles=n_veh, color='white')
+
+
+#vehicles.add("rl",acceleration_controller=(RLController, {}), num_vehicles=2)
 
 
 # - `vehs_per_hour`: nombre de vehicule par heure, uniformément espacés. Par exemple, comme il y a $60 \times 60 = 3600$ secondes dans une heure, le parametre $\frac{3600}{5}=720$ va faire rentrer des vehicules dans le network toutes les $5$ secondes.
@@ -123,36 +133,8 @@ vehicles.add("rl",acceleration_controller=(RLController, {}), num_vehicles=2)
 
 
 inflow = InFlows()
-
-inflow.add(veh_type      = "human",
-           edge          = "4794817",
-           probability   = 0.3, 
-           depart_speed  = 7,
-           depart_lane   = "random")
-
-inflow.add(veh_type      = "human",
-           edge          = "4783299#0",
-           probability   = 0.2,
-           depart_speed  = 7,
-           depart_lane   = "random")
-
-inflow.add(veh_type       = "human",
-           edge           = "-100822066",
-           probability    = 0.25,
-           depart_speed   = 7,
-           depart_lane    = "random")
-
-inflow.add(veh_type       = "rl",
-           edge           = "-100822066",
-           probability    = 0.05,
-           depart_speed   = 7,
-           depart_lane    = "random")
-
-inflow.add(veh_type       = "human",
-           edge          = "155558218",
-           probability   = 0.2,
-           depart_speed  = 7,
-           depart_lane   = "random")
+for edge in EDGES_DISTRIBUTION:
+    inflow.add(veh_type = "flow", edge = edge, probability = 0.1, depart_speed = 7)
 
 
 # ## Personnalise un Environnement pour le RL
@@ -187,9 +169,8 @@ action_spec = OrderedDict({ "30677963": [ "GGGGrrrGGGG", "rrrrGGGrrrr"],
 # In[8]:
 
 
-HORIZON  = 100
-SIM_STEP = 0.1
-n_veh    = 12
+HORIZON  = 1000
+SIM_STEP = 0.2
 rollouts = 10
 n_cpus   = 2
 discount_rate = 0.999
@@ -199,7 +180,7 @@ discount_rate = 0.999
 
 
 # SUMO PARAM
-sumo_params = SumoParams(sim_step=SIM_STEP, render=True)
+sumo_params = SumoParams(sim_step=SIM_STEP, render=False, print_warnings=False, no_step_log=False)
 
 # ENVIRONMENT PARAM
 ADDITIONAL_ENV_PARAMS = {"beta": n_veh, "action_spec": action_spec, "algorithm": "DQN", "tl_constraint_min": 100,  "tl_constraint_max": 600, "sim_step": SIM_STEP}
@@ -213,7 +194,7 @@ net_params = NetParams(inflows=inflow, osm_path=path_file)
 network = IssyOSMNetwork
 
 # INITIAL CONFIG
-initial_config = InitialConfig(edges_distribution=EDGES_DISTRIBUTION)
+initial_config = InitialConfig(spacing="uniform",edges_distribution=EDGES_DISTRIBUTION)
 
 
 flow_params = dict( exp_tag   = "ISSY_traffic", 
