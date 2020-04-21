@@ -1,8 +1,13 @@
+**<font size="6"><center>SUMO tools</center></font>**
+
+<center> Find here some additional tools for SUMO </a> </center>
+
+
 # SUMO-Web3D
 
-![Screenshot of SUMO-Web3D showing an intersection with cars and a bus](screenshots/acosta-ixn.png)
+Allow the visualization of [SUMO][] in 3D in a web browser using TraCI and three.js.
 
-Visualization of [SUMO][] in 3D in a web browser using TraCI and three.js.
+<img src="screenshots/sumo_3d.png">
 
 ## Setup
 
@@ -18,7 +23,6 @@ To run your own simulations, use the `-c` command line argument:
 
     sumo-web3d -c path/to/your/simulation.sumocfg
 
-![Screenshot of Bologna Acosta simulation](screenshots/acosta-wideview.png)
 
 ## Usage
 
@@ -88,7 +92,6 @@ If you'd like to iterate on the frontend code, run:
 
 instead of `yarn webpack` and `python sumo_web3d/sumo_web3d.py`.
 
-![Screenshot of an elevated highway with buildings](screenshots/elevated-highway.png)
 
 ### Run to visualize Flow
 First do 
@@ -133,6 +136,8 @@ You can add custom SUMO simulations to appear in the scenario dropdown. In order
 
 The OSM Web Wizard offers one of the easiest solutions to start with SUMO. Based on a selection of an openstreetmap map excerpt, you will be able to configure a randomized traffic demand and run and visualize the scenario in the [SUMO-GUI](https://sumo.dlr.de/docs/SUMO-GUI.html). This tutorial will guide you step by step from the selection of the map excerpt over defining the traffic demand through running and visualizing the scenario in the SUMO-GUI.
 
+<img src="screenshots/OSMWebWizard.jpg" width="450">
+
 ## Getting started
 
 The OSM Web Wizard is essentially a collection of python scripts located under the directory _tools_ in your sumo installation root. You start the OSM Web wizard by invoking the following command in the _tools_ directory:
@@ -140,8 +145,6 @@ The OSM Web Wizard is essentially a collection of python scripts located under t
     python osmWebWizard.py
 
 Windows users may also invoke the command by clicking _All Programs -> SUMO -> OSM Web Wizard_. Once the script is running, a web browser should open showing a map excerpt of central Berlin.
-
-![Screenshot of OSM Web Wizard](screenshots/OSMWebWizard.png)
 
 You may zoom and pan to the area of your interest. Caution: if the map excerpt covers a very large area, the simulation might become slow or even unresponsive. We suggest to choose a similar zoom level as in the initial view.
 
@@ -170,13 +173,13 @@ The next step is generating and running the scenario.
 
 The complete scenario will be generated automatically once _Generate Scenario_ in the control panel has been clicked. The scenario generation takes a couple of seconds or minutes (depending, among others, on the size of the scenario). Once the scenario generation process has finished, the SUMO-GUI starts and the simulation can be started by pressing the _Play_ button.
 
-![Screenshot of SUMO scenario](screenshots/SUMO_scenario.png)
+<img src="screenshots/SUMO_scenario.jpg" width="450" >
 
 ## Where to go from here
 
 The OSM Web Wizard stores the entire simulation scenario sumo config and intermediate files in a local directory with a name in the format of _yyyy-mm-dd-hh-mm-ss_. If your SUMO installation location is writeable, the data will be stored inside the _tools_ directory. Otherwise, a new directory _~/SUMO/yyyy-mm-dd-hh-mm-ss_ will be created to host the data. The contents of the directory look like this:
 
-![Screenshot of files SUMO scenario](screenshots/files_scenario.png)
+<img src="screenshots/files_scenario.png">
 
 You may now edit those files and re-run the simulation. To learn more about the SUMO scenario files, please consult the other [Tutorials](https://sumo.dlr.de/docs/Tutorials.html) as well.
 
