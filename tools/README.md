@@ -1,13 +1,5 @@
-<style>
-img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
 
-
-**<font size="6"><center>SUMO tools</center></font>**
+**<font size="20"><center>SUMO tools</center></font>**
 
 <center> Find here some additional tools for SUMO </a> </center>
 
@@ -145,7 +137,7 @@ You can add custom SUMO simulations to appear in the scenario dropdown. In order
 
 The OSM Web Wizard offers one of the easiest solutions to start with SUMO. Based on a selection of an openstreetmap map excerpt, you will be able to configure a randomized traffic demand and run and visualize the scenario in the [SUMO-GUI](https://sumo.dlr.de/docs/SUMO-GUI.html). This tutorial will guide you step by step from the selection of the map excerpt over defining the traffic demand through running and visualizing the scenario in the SUMO-GUI.
 
-<img src="screenshots/OSMWebWizard.jpg" width="450">
+<div style="text-align:center"><img src="screenshots/OSMWebWizard.jpg" width="450" /></div>
 
 ## Getting started
 
@@ -182,7 +174,7 @@ The next step is generating and running the scenario.
 
 The complete scenario will be generated automatically once _Generate Scenario_ in the control panel has been clicked. The scenario generation takes a couple of seconds or minutes (depending, among others, on the size of the scenario). Once the scenario generation process has finished, the SUMO-GUI starts and the simulation can be started by pressing the _Play_ button.
 
-<img src="screenshots/SUMO_scenario.jpg" width="450" >
+<div style="text-align:center"><img src="screenshots/SUMO_scenario.jpg" width="450" /></div>
 
 ## Where to go from here
 
