@@ -1,3 +1,12 @@
+<style>
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
 **<font size="6"><center>SUMO tools</center></font>**
 
 <center> Find here some additional tools for SUMO </a> </center>
