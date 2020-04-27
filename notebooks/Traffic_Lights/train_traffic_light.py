@@ -175,6 +175,7 @@ horizon  = 1000
 SIM_STEP = 0.2
 rollouts = 10
 n_cpus   = 1
+n_gpus   = 0
 discount_rate = 0.999
 
 
@@ -182,14 +183,14 @@ discount_rate = 0.999
 
 
 # SUMO PARAM
-sumo_params = SumoParams(sim_step=SIM_STEP, render=False, restart_instance=True, print_warnings=False, no_step_log=False)
+sumo_params = SumoParams(sim_step=SIM_STEP, render=False, restart_instance=True)#, print_warnings=False, no_step_log=False)
 
 # ENVIRONMENT PARAM
 ADDITIONAL_ENV_PARAMS = {"beta": n_veh, "action_spec": action_spec, "algorithm": "DQN", "tl_constraint_min": 100,  "tl_constraint_max": 600, "sim_step": SIM_STEP}
 env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS, horizon=horizon, warmup_steps=1)
 
 # NETWORK PARAM
-path_file  = '/home/julien/projet_CIL4SYS/NOTEBOOKS/issy.osm'
+path_file  = '/ldaphome/jguegan/projet_CIL4SYS/issy.osm'
 net_params = NetParams(inflows=inflow, osm_path=path_file) 
 
 # NETWORK
@@ -222,7 +223,7 @@ def setup_DQN_exp():
     alg_run   = 'DQN'
     agent_cls = get_agent_class(alg_run)
     config    = agent_cls._default_config.copy()
-    config['num_workers']      = n_cpus
+   # config['num_workers']      = n_cpus
     config['train_batch_size'] = horizon * rollouts
     config['gamma']            = discount_rate
     config['clip_actions']     = False  # FIXME(ev) temporary ray bug
@@ -232,6 +233,8 @@ def setup_DQN_exp():
 
     # save the flow params for replay
     flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True, indent=4)
+    
+    
     config['env_config']['flow_params'] = flow_json
     config['env_config']['run'] = alg_run
 
@@ -255,11 +258,11 @@ def setup_PPO_exp():
     alg_run   = 'PPO'
     agent_cls = get_agent_class(alg_run)
     config    = agent_cls._default_config.copy()
-    config['num_workers']      = n_cpus
+   # config['num_workers']      = n_cpus
     config['train_batch_size'] = horizon * rollouts
     config['gamma']            = discount_rate
     config['use_gae']          = True
-    config['lambda']           = 0.97
+    config['lambda']        = 0.97
     config['kl_target']        = 0.02
     config['num_sgd_iter']     = 10
     config['clip_actions']     = False  # FIXME(ev) temporary ray bug
@@ -286,7 +289,7 @@ def setup_PPO_exp():
 
 alg_run, gym_name, config = setup_DQN_exp()
 
-ray.init(num_cpus=n_cpus + 1) # , local_mode=True)
+ray.init()#num_cpus=n_cpus,num_gpus=1) # , local_mode=True)
 
 
 # In[13]:
@@ -305,11 +308,13 @@ exp_tag = {"run": alg_run,
            "checkpoint_freq": 2,
            "checkpoint_at_end": True,
            "max_failures": 10,
-           "stop": {"training_iteration": 6}}
+           "stop": {"training_iteration": 6},
+           "resources_per_trial": {"cpu":n_cpus,"gpu":n_gpus}
+           }
 
 
 
-trials = run_experiments({flow_params["exp_tag"]: exp_tag}, verbose=0)
+trials = run_experiments({flow_params["exp_tag"]: exp_tag},queue_trials=True)
 
 
 # In[ ]:
