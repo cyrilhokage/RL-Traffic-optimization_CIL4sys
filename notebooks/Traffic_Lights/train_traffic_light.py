@@ -30,6 +30,7 @@ from ray.tune import run_experiments
 from ray.tune.registry import register_env
 from flow.utils.registry import make_create_env
 from flow.utils.rllib import FlowParamsEncoder
+import numpy as np
 
 # ## Crée le network
 
@@ -164,7 +165,6 @@ from IssyEnv import IssyEnv1
 
 # possibles actions
 action_spec = OrderedDict({ "30677963": [ "GGGGrrrGGGG", "rrrrGGGrrrr"],
-                            "30763263": ["GGGGGGGGGG",  "rrrrrrrrrr"],
                             "30677810": [ "GGrr", "rrGG"]})
 
 
@@ -175,22 +175,20 @@ horizon  = 1000
 SIM_STEP = 0.2
 rollouts = 10
 n_cpus   = 1
-n_gpus   = 0
-discount_rate = 0.999
 
 
 # In[9]:
 
 
 # SUMO PARAM
-sumo_params = SumoParams(sim_step=SIM_STEP, render=False, restart_instance=True)#, print_warnings=False, no_step_log=False)
+sumo_params = SumoParams(sim_step=SIM_STEP, render=False, restart_instance=True, print_warnings=False, no_step_log=False)
 
 # ENVIRONMENT PARAM
 ADDITIONAL_ENV_PARAMS = {"beta": n_veh, "action_spec": action_spec, "algorithm": "DQN", "tl_constraint_min": 100,  "tl_constraint_max": 600, "sim_step": SIM_STEP}
 env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS, horizon=horizon, warmup_steps=1)
 
 # NETWORK PARAM
-path_file  = '/ldaphome/jguegan/projet_CIL4SYS/issy.osm'
+path_file  = '/home/julien/projet_CIL4SYS/NOTEBOOKS/issy.osm'
 net_params = NetParams(inflows=inflow, osm_path=path_file) 
 
 # NETWORK
@@ -223,7 +221,7 @@ def setup_DQN_exp():
     alg_run   = 'DQN'
     agent_cls = get_agent_class(alg_run)
     config    = agent_cls._default_config.copy()
-   # config['num_workers']      = n_cpus
+    config['num_workers']      = n_cpus
     config['train_batch_size'] = horizon * rollouts
     config['gamma']            = discount_rate
     config['clip_actions']     = False  # FIXME(ev) temporary ray bug
@@ -233,8 +231,6 @@ def setup_DQN_exp():
 
     # save the flow params for replay
     flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True, indent=4)
-    
-    
     config['env_config']['flow_params'] = flow_json
     config['env_config']['run'] = alg_run
 
@@ -258,15 +254,11 @@ def setup_PPO_exp():
     alg_run   = 'PPO'
     agent_cls = get_agent_class(alg_run)
     config    = agent_cls._default_config.copy()
-   # config['num_workers']      = n_cpus
+    config['num_workers']      = n_cpus
     config['train_batch_size'] = horizon * rollouts
-    config['gamma']            = discount_rate
-    config['use_gae']          = True
-    config['lambda']        = 0.97
-    config['kl_target']        = 0.02
-    config['num_sgd_iter']     = 10
-    config['clip_actions']     = False  # FIXME(ev) temporary ray bug
+    config['gamma']            = discount_rate # Discount factor of the MDP.
     config['horizon']          = horizon
+    config['clip_actions']     = False  # FIXME(ev) temporary ray bug
     config['model'].update({'fcnet_hiddens': [32, 32]})
 
     # save the flow params for replay
@@ -289,17 +281,50 @@ def setup_PPO_exp():
 
 alg_run, gym_name, config = setup_DQN_exp()
 
-ray.init()#num_cpus=n_cpus,num_gpus=1) # , local_mode=True)
+ray.init(num_cpus=n_cpus, ignore_reinit_error=True, include_webui=True) # , local_mode=True)
 
-
-# In[13]:
-
-
-# import pixiedust
-# %%pixie_debugger
 
 
 # In[14]:
+
+# ======= DEFINE CALLBACKS ========= #
+
+def on_episode_start(info):
+    episode = info["episode"]
+    episode.user_data["accelerations"]  = []
+    episode.user_data["speeds"]         = []
+    episode.user_data["veh_wait_steps"] = []
+    episode.user_data["CO2_emissions"]  = []
+
+def on_episode_step(info):
+    episode = info["episode"]
+    acceleration  = np.mean(episode.last_observation_for()[:n_veh])
+    speed         = np.mean(episode.last_observation_for()[n_veh:2*n_veh])
+    CO2_emission  = np.mean(episode.last_observation_for()[2*n_veh:3*n_veh])
+    veh_wait_step = np.mean(episode.last_observation_for()[3*n_veh:4*n_veh])
+    episode.user_data["accelerations"].append(acceleration)
+    episode.user_data["speeds"].append(speed)
+    episode.user_data["CO2_emissions"].append(CO2_emission)
+    episode.user_data["veh_wait_steps"].append(veh_wait_step)
+
+def on_episode_end(info):
+    episode = info["episode"]
+    acceleration  = np.mean(episode.user_data["accelerations"])
+    speed         = np.mean(episode.user_data["speeds"])
+    CO2_emission  = np.mean(episode.user_data["CO2_emissions"])
+    veh_wait_step = np.mean(episode.user_data["veh_wait_steps"])
+    episode.custom_metrics["acceleration"]  = acceleration
+    episode.custom_metrics["speed"]         = speed
+    episode.custom_metrics["CO2_emission"]  = CO2_emission
+    episode.custom_metrics["veh_wait_step"] = veh_wait_step
+
+
+
+MyCallbacks = {"on_episode_start": on_episode_start,
+                "on_episode_step": on_episode_step,
+                "on_episode_end" : on_episode_end}
+
+config["callbacks"] = MyCallbacks
 
 
 exp_tag = {"run": alg_run,
@@ -308,17 +333,17 @@ exp_tag = {"run": alg_run,
            "checkpoint_freq": 2,
            "checkpoint_at_end": True,
            "max_failures": 10,
-           "stop": {"training_iteration": 6},
-           "resources_per_trial": {"cpu":n_cpus,"gpu":n_gpus}
-           }
+           "stop": {"training_iteration": 4}}
+           #"resources_per_trial": {"cpu":2,"gpu":0}}
 
 
 
-trials = run_experiments({flow_params["exp_tag"]: exp_tag},queue_trials=True)
+trials = run_experiments({flow_params["exp_tag"]: exp_tag})#, queue_trials=True)
 
 
 # In[ ]:
 
+ray.shutdown()
 
 
 
