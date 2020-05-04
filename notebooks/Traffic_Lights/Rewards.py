@@ -111,15 +111,7 @@ class Rewards:
             reward for each vehicles accelerating less than max_acc.
         penalty: int
              penalty to assign to vehicles traveling under max_acc"""
-        s = 0
-        for acc in obs_veh_acc.values():
-            for t in range(len(acc)):
-                if np.abs(acc[t]) < max_acc:
-                    s += reward 
-                else:
-                    s += penalty
-            
-        return s
+        return np.sum([np.max(0,acc) for acc in obs_veh_acc.values()])
 
     def penalize_max_wait(self,
                           obs_veh_wait_steps,
