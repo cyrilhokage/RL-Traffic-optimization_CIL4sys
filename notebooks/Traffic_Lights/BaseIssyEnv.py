@@ -46,7 +46,6 @@ class BaseIssyEnv(Env):
         self.rewards           = Rewards(self.k, self.action_spec)
         self.states            = States(self.k, self.beta)
 
-        print('=== INITIALISATION ===')
         self._init_obs_veh_acc()
         self._init_obs_veh_wait_steps()
         self._init_obs_tl_wait_steps()
@@ -58,7 +57,7 @@ class BaseIssyEnv(Env):
     def _init_obs_veh_acc(self):
         """Initializes the data structures that will store vehicle speeds and accelerations"""
         self._obs_veh_vel = OrderedDict([('human_' + str(i), 0)  for i in range(self.beta)])
-        self.obs_veh_acc  = OrderedDict([('human_' + str(i), [0]) for i in range(self.beta)])
+        self.obs_veh_acc  = OrderedDict([('human_' + str(i), 0) for i in range(self.beta)])
 
     def _update_obs_veh_acc(self):
         """Updates the observed vehicle speed and acceleration data structures.
@@ -69,16 +68,15 @@ class BaseIssyEnv(Env):
         
         placeholder = 0.
         speed_odict = OrderedDict([('human_' + str(i), placeholder) for i in range(self.beta)])
+        acc_odict   =  OrderedDict([('human_' + str(i), placeholder) for i in range(self.beta)])
 
         for id in self.get_observable_veh_ids():
             speed_odict[id] = self.k.vehicle.get_speed(id)
 
         for i, id in enumerate(self.get_observable_veh_ids()):
-            new_acc  = (speed_odict[id] - self._obs_veh_vel[id]) / self.sim_step
-            list_acc = self.obs_veh_acc[id].copy()
-            list_acc.append(new_acc)
-            self.obs_veh_acc[id] = list_acc
+            acc_odict[id]  = (speed_odict[id] - self._obs_veh_vel[id]) / self.sim_step
 
+        self._obs_veh_acc = acc_odict
         self._obs_veh_vel = speed_odict
 
     def _init_obs_veh_wait_steps(self):
@@ -132,11 +130,7 @@ class BaseIssyEnv(Env):
         """
         new_state = []
         if self.algorithm == "DQN":
-            # identity_action = [
-            #     tuple(
-            #         self.k.traffic_light.get_state(id)
-            #         for id in self.action_spec.keys())
-            # ]
+            # identity_action = [ tuple(self.k.traffic_light.get_state(id) for id in self.action_spec.keys()) ]
             all_actions = list(itertools.product(*list(self.action_spec.values())))  # + identity_action
             new_state = all_actions[rl_actions]
         elif self.algorithm == "PPO":
