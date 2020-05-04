@@ -53,15 +53,14 @@ class IssyEnv1(BaseIssyEnv):
         (See parent class for more information)"""
         veh_ids = self.get_observable_veh_ids()
         tl_ids  = self.get_controlled_tl_ids()
-        current_accelerations = [item[-1] for item in self.states.veh.accelerations(self.obs_veh_acc)]
         return np.concatenate((
+            self.states.veh.accelerations(self.obs_veh_acc),
             self.states.veh.speeds(veh_ids),
-            self.states.veh.orientations(veh_ids),
             self.states.veh.CO2_emissions(veh_ids),
             self.states.veh.wait_steps(self.obs_veh_wait_steps),
-            current_accelerations,
-            self.states.tl.binary_state_ohe(tl_ids),
             self.states.tl.wait_steps(self.obs_tl_wait_steps),
+            self.states.veh.orientations(veh_ids),
+            self.states.tl.binary_state_ohe(tl_ids),
         ))
 
     def compute_reward(self, rl_actions, **kwargs):
