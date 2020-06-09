@@ -111,7 +111,18 @@ class Rewards:
             reward for each vehicles accelerating less than max_acc.
         penalty: int
              penalty to assign to vehicles traveling under max_acc"""
-        return np.sum([np.max(0,acc) for acc in obs_veh_acc.values()])
+        return np.sum([reward if np.abs(acc) < max_acc else penalty for acc in obs_veh_acc.values()])
+        
+    def sum_acc_pos(self, obs_veh_acc):
+        """This rewards the beta vehicles accelerating less than a constraint.
+
+        Parameters
+        ----------
+        obs_veh_acc: Dict<String, Float>, type of `BaseIssyEnv.obs_veh_acc`
+            Dictionary of accelerations in m/s^2."""
+            
+        return np.sum([np.max([0,acc]) for acc in obs_veh_acc.values()])
+
 
     def penalize_max_wait(self,
                           obs_veh_wait_steps,
@@ -138,6 +149,10 @@ class Rewards:
             reward if obs_veh_wait_steps[veh_id] < max_wait else penalty
             for veh_id in self._get_obs_veh_ids()
         ])
+    
+    def sum_wait_step(self, obs_veh_wait_steps):
+        
+        return np.sum([obs_veh_wait_steps[veh_id] for veh_id in self._get_obs_veh_ids() ])
 
     def mean_speed(self):
         """Returns the mean velocity for all vehicles on the simulation."""
