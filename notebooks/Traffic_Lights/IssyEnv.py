@@ -2,10 +2,10 @@ import numpy as np
 
 from gym.spaces.box import Box
 
-from BaseIssyEnv import BaseIssyEnv
+from BaseIssyEnv import BaseIssyEnv1, BaseIssyEnv2
+from collections import Counter
 
-
-class IssyEnv1(BaseIssyEnv):
+class IssyEnv1(BaseIssyEnv1):
     """Final environment.
 
     Required from env_params: See parent class
@@ -58,8 +58,8 @@ class IssyEnv1(BaseIssyEnv):
             self.states.veh.speeds(veh_ids),
             self.states.veh.CO2_emissions(veh_ids),
             self.states.veh.wait_steps(self.obs_veh_wait_steps),
-            self.states.tl.wait_steps(self.obs_tl_wait_steps),
             self.states.veh.orientations(veh_ids),
+            self.states.tl.wait_steps(self.obs_tl_wait_steps),
             self.states.tl.binary_state_ohe(tl_ids),
         ))
 
@@ -69,13 +69,69 @@ class IssyEnv1(BaseIssyEnv):
 
         (See parent class for more information)"""
         
-        
-        min_speed       = 10    # km/h
-        idled_max_steps = 80    # steps
-        max_abs_acc     = 0.15  # m/s^2
+        max_emission = 3000    # mg of CO2 per timestep
+        min_speed = 10         # km/h
+        idled_max_steps = 80   # steps
+        max_abs_acc = 0.15     # m / s^2
         c = 0.001
         return c * (
             self.rewards.penalize_min_speed(min_speed) +
+            self.rewards.penalize_max_emission(max_emission) +
             self.rewards.penalize_max_wait(self.obs_veh_wait_steps, idled_max_steps, 0, -10) +
             self.rewards.penalize_max_acc(self.obs_veh_acc, max_abs_acc, 1, 0)
         )
+        
+        """
+        min_speed = 10    # km/h
+        max_wait  = 80    # steps
+        c1 = 1
+        c2 = 0.01
+        c3 = 100
+        return  (c1 * self.rewards.penalize_min_speed(min_speed) - 
+                 c2 * self.rewards.penalize_max_wait(self.obs_veh_wait_steps, max_wait) - 
+                 c3 * self.rewards.penalize_max_acc(self.obs_veh_acc,1))"""
+
+class IssyEnv2(BaseIssyEnv2):
+
+    @property
+    def observation_space(self):
+        num_edges = len(self.k.network.get_edge_list())
+        print(num_edges)
+        return Box(low=-float("inf"), high=float("inf"), shape=(num_edges + self.get_num_traffic_lights(), ) )
+
+            
+    def get_queue_length(self):
+        edges_each_veh = self.k.vehicle.get_edge(self.all_vehicles_ids)
+        
+        all_queues     = dict.fromkeys(self.k.network.get_edge_list(),0)
+        
+        # handle vehicule on junctions
+        new_pos_veh      = dict(zip(self.all_vehicles_ids, edges_each_veh))
+        new_pos_veh_true = new_pos_veh.copy()
+        for veh_id in new_pos_veh:
+            if ":" in new_pos_veh[veh_id]:
+                new_pos_veh_true[veh_id] = self.pos_veh[veh_id]
+            if new_pos_veh[veh_id]=='':
+                del new_pos_veh_true[veh_id]
+                
+        current_queues = Counter(new_pos_veh_true.values())
+        
+        all_queues.update(dict(zip(current_queues.keys(), current_queues.values())))
+        
+        return all_queues
+
+
+    def get_state(self, **kwargs):
+        queues_length = [*self.get_queue_length().values()]
+        tl_ids        = self.get_controlled_tl_ids()
+        tl_states     = self.states.tl.binary_state_ohe(tl_ids)
+        print(len(queues_length))
+        a = np.concatenate((queues_length, tl_states))
+        print(len(a[:len(self.k.network.get_edge_list())]))
+        return np.concatenate((queues_length, tl_states))
+
+    def compute_reward(self, rl_actions, **kwargs):
+        """We penalize waiting steps"""
+        
+        return - np.sum([self.veh_wait_steps[veh_id] for veh_id in self.all_vehicles_ids ])
+        
