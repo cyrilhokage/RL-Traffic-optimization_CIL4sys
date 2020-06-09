@@ -58,10 +58,9 @@ class TrafficLightsStates:
              Vector encoding how many steps each intersection has maintained
              traffic light state for.
         """
-        return [
-            tl_wait_steps[tl_id]['timer'] for tl_id in tl_wait_steps.keys()
-        ]
-
+        return [tl_wait_steps[tl_id]['timer'] for tl_id in tl_wait_steps.keys()]
+    
+        
 
 class VehicleStates:
     def __init__(self, kernel, beta):
@@ -163,6 +162,6 @@ class VehicleStates:
 
 class States:
     def __init__(self, kernel, beta):
-        self.k = kernel
-        self.tl = TrafficLightsStates(kernel)
+        self.k   = kernel
+        self.tl  = TrafficLightsStates(kernel)
         self.veh = VehicleStates(kernel, beta)
