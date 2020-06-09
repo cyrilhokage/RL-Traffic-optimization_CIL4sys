@@ -1,17 +1,34 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 24 00:33:16 2020
+"""Contains the IssyOSM network class."""
 
-@author: julien
-"""
-
-from flow.networks import Network
+from flow.core.params import InitialConfig
+from flow.core.params import TrafficLightParams
+from flow.networks.base import Network
 import random
 
-class IssyOSMNetwork(Network):
+ADDITIONAL_NET_PARAMS = {
+    # speed limit for all edges
+    "speed_limit": 50 # 50Km/h is the limit in Issy
+}
 
-    
+EDGES_DISTRIBUTION = [
+    "-100822066",
+    "4794817",
+    "4783299#0",
+    "155558218"
+]
+
+class IssyOSMNetwork(Network):
+    """Network class for Issy simulations.
+    This network is a recreation of Issy-les-Moulineaux from a OSM file.
+    Usage
+
+    """
+
+    def __init__(self, name, vehicles, net_params, initial_config=InitialConfig(), traffic_lights=TrafficLightParams()):
+        """Instantiate the network class."""
+        self.nodes_dict = dict()
+        super().__init__(name, vehicles, net_params,initial_config, traffic_lights)
+        
     def get_routes_list(self):
         return list(self.specify_routes({}).keys())
 
@@ -19,13 +36,13 @@ class IssyOSMNetwork(Network):
         return random.choice(self.get_routes_list())
 
     def specify_routes(self, net_params):
-        return {
+        rts = {
             "-100822066": [ #N
                 "-100822066",
                 "-352962858#1",
                 "-352962858#0",
                 "-4786940#1",
-                 "-4786940#0",
+                "-4786940#0",
             ],
             
             "4794817" : [ #Loop
@@ -36,16 +53,11 @@ class IssyOSMNetwork(Network):
                 "4786965#1",
                 "4786965#2",
                 "4786965#3",
-                "4795729",
-                "-352962858#1",
-                "4795742#0",
-                "4795742#1",
-                "4786965#3",
                 "4786965#4",
-                "4786965#5",
+                "4786965#5",   
             ],
             
-            "4783299#0": [    #E
+            "4783299#0" : [ #Loop bis
                 "4783299#0",
                 "4783299#1",
                 "4783299#2",
@@ -56,8 +68,11 @@ class IssyOSMNetwork(Network):
                 "4786940#0",
                 "4786940#1",
                 "352962858#0",
-                "352962858#1",
-                "100822066",
+                "4795742#0", #??
+                "4795742#1",
+                "4786965#3",
+                "4795729",
+                "100822066",    
             ],
             
             "155558218": [
@@ -68,3 +83,4 @@ class IssyOSMNetwork(Network):
                 "100822066",
             ],     
         }
+        return rts
