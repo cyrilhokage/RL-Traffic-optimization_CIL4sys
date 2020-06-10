@@ -53,6 +53,69 @@ class Rewards:
             if self.kernel.vehicle.get_speed(id) > min_speed else penalty
             for id in self._get_obs_veh_ids()
         ])
+    
+    def get_distance_to_intersection(self, veh_ids):
+        """Determine the distance from a vehicle to its next intersection.
+        Parameters
+        ----------
+        veh_ids : str or str list
+            vehicle(s) identifier(s)
+        Returns
+        -------
+        float (or float list)
+            distance to closest intersection
+        """
+        if isinstance(veh_ids, list):
+            return [self.get_distance_to_intersection(veh_id)
+                    for veh_id in veh_ids]
+        return self.find_intersection_dist(veh_ids)
+
+    
+    def find_intersection_dist(self, veh_id):
+        """Return distance from intersection.
+        Return the distance from the vehicle's current position to the position
+        of the node it is heading toward.
+        """
+        edge_id = self.kernel.vehicle.get_edge(veh_id)
+        # FIXME this might not be the best way of handling this
+        if edge_id == "":
+            return -10
+        if 'center' in edge_id:
+            return 0
+        edge_len = self.kernel.network.edge_length(edge_id)
+        relative_pos = self.kernel.vehicle.get_position(veh_id)
+        dist = edge_len - relative_pos
+        return dist
+    
+    def get_time_to_intersection(self, veh_ids):
+        """Determine the distance from a vehicle to its next intersection.
+        Parameters
+        ----------
+        veh_ids : str or str list
+            vehicle(s) identifier(s)
+        Returns
+        -------
+        float (or float list)
+            time to the closest intersection
+        """
+        if isinstance(veh_ids, list):
+            return [self.get_time_to_intersection(veh_id)
+                    for veh_id in veh_ids]
+        return self.find_intersection_time(veh_ids)
+    
+    def find_intersection_time(self, veh_id):
+        
+        """Return time to intersection.
+        Return the time between the vehicle's current position to the position
+        of the node it is heading toward.
+        """
+        
+        veh_speed = self.k.vehicle.get_speed(veh_id)
+        
+        if(veh_speed != 0):
+            return self.find_intersection_dist(veh_id) / veh_speed
+        else:
+            return 1000 # A changer en fonction des appréciations
 
     def penalize_tl_switch(self, penatly=10):
         """This reward penalizes when a controlled traffic light switches

@@ -63,7 +63,7 @@ class IssyEnv1(BaseIssyEnv):
             self.states.tl.binary_state_ohe(tl_ids),
             self.states.tl.wait_steps(self.obs_tl_wait_steps),
         ))
-
+    
     def compute_reward(self, rl_actions, **kwargs):
         """We reward vehicule speeds and penalize their emissions along
         with idled cars.
