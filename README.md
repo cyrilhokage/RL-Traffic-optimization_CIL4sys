@@ -24,6 +24,14 @@ In terms of results, we have shown that traffic flow is possible with substantia
 
 ![Issy-les-Moulineaux trained](IssyLesMoulineauxtrained.gif) 
 
+In this experiment, the system decided to close secundary roads in favor of the main axis which circulates the greatest number of vehicles.
+
+> **Array Results of 18 training with 18 different reward functions**
+![Issy Results tab](https://github.com/cyrilhokage/RL-Traffic-optimization_CIL4sys/blob/master/Capture%20d%E2%80%99e%CC%81cran%202020-06-28%20a%CC%80%2013.47.20.png)
+
+> **Graph of results normalized**
+![Graph Results](https://github.com/cyrilhokage/RL-Traffic-optimization_CIL4sys/blob/master/Capture%20d%E2%80%99e%CC%81cran%202020-06-28%20a%CC%80%2013.52.09.png)
+
 ### <ins>Results for a Crossroad</ins>
 > **Untrained** 
 
