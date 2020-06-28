@@ -14,10 +14,30 @@ All of the code is in python.
 
 # Results
 In terms of results, we have shown that traffic flow is possible with substantial improvements in terms of waiting time and average speed. On the other hand, in terms of the reduction of greenhouse gases, with the exception of the study of a single crossroads, it is difficult to observe improvements. Undoubtedly because the behavior of the implemented vehicles was a "human" behavior aiming to reach as quickly as possible the maximum authorized speed, after passing to green lights. Adding autonomous vehicles to smoother acceleration in traffic could solve this problem.
-![Issy-les-Moulineaux untrained](IssyLesMOulineauxuntrained.gif)
+
+### <ins>Results for Issy-les-Moulineaux</ins>
+> **Untrained** 
+
+![Issy-les-Moulineaux untrained](IssyLesMOulineauxuntrained.gif) 
+
+> **Trained** 
+
+![Issy-les-Moulineaux trained](IssyLesMoulineauxtrained.gif) 
+
+### <ins>Results for a Crossroad</ins>
+> **Untrained** 
+
+![Crossroad untrained](Carrefour_untrained.gif) 
+
+> **Trained** 
+
+![Crossroad trained](Carrefour_trained.gif)
+
 
 # Installation
 For library installation, refer to: https://flow.readthedocs.io/en/latest/flow_setup.html#local-installation
 
 In addition, to fully master the simulation and learning environment, it is strongly recommended to follow the FLOW tutorials: https://github.com/flow-project/flow/tree/master/tutorials/
+
+To explore the results given by SUMO in csv format : Etude_csv.ipynb
 
