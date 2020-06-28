@@ -47,5 +47,5 @@ For library installation, refer to: https://flow.readthedocs.io/en/latest/flow_s
 
 In addition, to fully master the simulation and learning environment, it is strongly recommended to follow the FLOW tutorials: https://github.com/flow-project/flow/tree/master/tutorials/
 
-To explore the results given by SUMO in csv format : Etude_csv.ipynb
+To explore the results given by SUMO in csv format : https://github.com/cyrilhokage/RL-Traffic-optimization_CIL4sys/blob/master/Etude_csv.ipynb
 
